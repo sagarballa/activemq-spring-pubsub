@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd">
+
+    <!-- Activemq connection factory -->
+    <bean id="amqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <constructor-arg index="0" value="${JMS.BROKER.URL}" />
+    </bean>
+
+    <!-- ConnectionFactory Definition -->
+    <bean id="connectionFactory"
+              class="org.springframework.jms.connection.CachingConnectionFactory">
+        <constructor-arg ref="amqConnectionFactory" />
+    </bean>
+
+    <!-- Destination Topic -->
+    <bean id="destinationTopic" class="org.apache.activemq.command.ActiveMQTopic">
+        <constructor-arg index="0" value="${JMS.TOPIC.NAME}" />
+    </bean>
+
+    <!-- JmsTemplate Definition -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="defaultDestination" ref="destinationTopic" />
+        <property name="pubSubDomain" value="true" />
+    </bean>
+
+    <!-- Message Publisher -->
+    <bean id="messagePublisher" class="com.balla.activemq.pubsub.example.MessagePublisher" />
+
+    <!-- Message Subscriber1 -->
+    <bean id="messageSubscriber1" class="com.balla.activemq.pubsub.example.MessageSubscriber1" />
+
+    <!-- Message Subscriber2 -->
+    <bean id="messageSubscriber2" class="com.balla.activemq.pubsub.example.MessageSubscriber2" />
+
+    <!-- Message Subscriber1 Container -->
+    <bean
+        class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="destinationName" value="${JMS.TOPIC.NAME}" />
+        <property name="messageListener" ref="messageSubscriber1" />
+        <property name="pubSubDomain" value="true" />
+    </bean>
+
+    <!-- Message Subscriber2 Container -->
+    <bean
+        class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="destinationName" value="${JMS.TOPIC.NAME}" />
+        <property name="messageListener" ref="messageSubscriber2" />
+        <property name="pubSubDomain" value="true" />
+    </bean>
+
+</beans>
